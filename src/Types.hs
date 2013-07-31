@@ -1,3 +1,12 @@
 module Types where
 
-data Flag = AcceptInUnbound | Yield deriving (Eq,Show)
+data Options = Options {
+    acceptInUnbound :: Bool
+  , yieldAfterSend  :: Bool
+  }
+
+defaultOptions :: Options
+defaultOptions = Options {
+    acceptInUnbound = False
+  , yieldAfterSend  = False
+  }

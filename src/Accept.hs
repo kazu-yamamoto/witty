@@ -7,12 +7,12 @@ import Network.Socket (Socket, accept)
 import Worker
 import Types
 
-acceptLoop :: [Flag] -> Socket -> IO ()
-acceptLoop flags s
-  | AcceptInUnbound `elem` flags = runInUnboundThread $ acceptLoop' flags s
-  | otherwise                    = acceptLoop' flags s
+acceptLoop :: Options -> Socket -> IO ()
+acceptLoop opt s
+  | acceptInUnbound opt = runInUnboundThread $ acceptLoop' opt s
+  | otherwise           = acceptLoop' opt s
 
-acceptLoop' :: [Flag] -> Socket -> IO ()
-acceptLoop' flags s = forever $ do
+acceptLoop' :: Options -> Socket -> IO ()
+acceptLoop' opt s = forever $ do
     (sock, _) <- accept s
-    forkIO $ worker flags sock
+    forkIO $ worker opt sock

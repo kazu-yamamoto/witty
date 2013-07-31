@@ -16,11 +16,11 @@ import Types
 recvBufferSize :: Int
 recvBufferSize = 4096
 
-worker :: [Flag] -> Socket -> IO ()
-worker flags sock = do
+worker :: Options -> Socket -> IO ()
+worker opt sock = do
     recvBuffer <- mallocForeignPtrBytes recvBufferSize
     let (replyFPtr,_,_) = toForeignPtr reply
-        shouldYield = Yield `elem` flags
+        shouldYield = yieldAfterSend opt
     withForeignPtr replyFPtr $
         withForeignPtr recvBuffer . serve shouldYield sock
 
