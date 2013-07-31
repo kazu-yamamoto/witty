@@ -6,7 +6,7 @@ import Data.ByteString.Internal (toForeignPtr)
 import Data.Word (Word8)
 import Foreign.ForeignPtr (mallocForeignPtrBytes, withForeignPtr)
 import Foreign.Ptr (Ptr)
-import Network.Socket (Socket)
+import Network.Socket (Socket, sClose)
 
 import Http
 import Recv
@@ -29,8 +29,10 @@ serve shouldYield sock replyPtr recvPtr = loop
   where
     loop = do
         len <- recv sock recvPtr recvBufferSize
-        when (len > 0) $ do
+        if len > 0 then do
             sendAll sock replyPtr replyLen
             when shouldYield yield
             loop
+          else
+            sClose sock
 
