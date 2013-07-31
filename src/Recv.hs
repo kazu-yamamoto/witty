@@ -3,8 +3,9 @@
 module Recv (recv) where
 
 import Control.Concurrent (threadWaitRead)
-import Foreign
+import Data.Word (Word8)
 import Foreign.C.Types
+import Foreign.Ptr (Ptr, castPtr)
 import Network.Socket (Socket, fdSocket)
 import Network.Socket.Internal (throwSocketErrorIfMinus1RetryMayBlock)
 

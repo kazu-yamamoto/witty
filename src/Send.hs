@@ -4,8 +4,8 @@ module Send (sendAll) where
 
 import Control.Concurrent (threadWaitWrite)
 import Control.Monad (when, liftM)
-import Foreign
 import Foreign.C.Types
+import Foreign.Ptr (Ptr, plusPtr)
 import Network.Socket (Socket(..))
 import Network.Socket.Internal (throwSocketErrorIfMinus1RetryMayBlock)
 

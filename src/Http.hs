@@ -5,7 +5,7 @@ module Http (
   , replyLen
   ) where
 
-import Data.ByteString as B
+import Data.ByteString as B (ByteString, length, concat)
 import Data.ByteString.Char8 ()
 
 reply :: ByteString
