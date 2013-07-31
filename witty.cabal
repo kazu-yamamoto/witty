@@ -12,6 +12,13 @@ Build-Type:             Simple
 
 Executable witty
   Main-Is:              Witty.hs
+  Other-Modules:        Accept
+                        Http
+                        Listen
+                        Recv
+                        Send
+                        Types
+                        Worker
   HS-Source-Dirs:       src
   GHC-Options:          -Wall -threaded -rtsopts
   Build-Depends:        base >= 4.0 && < 5
