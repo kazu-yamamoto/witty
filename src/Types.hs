@@ -8,6 +8,7 @@ data Options = Options {
   , yieldAfterSend  :: Bool
   , useRawSend      :: Bool
   , useRawRecv      :: Bool
+  , prepareRecvBuf  :: Bool
   }
 
 defaultOptions :: Options
@@ -16,6 +17,7 @@ defaultOptions = Options {
   , yieldAfterSend  = False
   , useRawSend      = False
   , useRawRecv      = False
+  , prepareRecvBuf  = False
   }
 
 type Receiver = IO Int
@@ -23,3 +25,9 @@ type Sender = IO ()
 type Closer = IO ()
 
 type Buffer = ForeignPtr Word8
+
+recvBufferSize :: Int
+recvBufferSize = 4096
+
+arenaSize :: Int
+arenaSize = 1000

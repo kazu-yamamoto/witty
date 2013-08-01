@@ -2,29 +2,36 @@ module Worker where
 
 import Control.Concurrent (yield)
 import Control.Monad (when)
-import Foreign.ForeignPtr (mallocForeignPtrBytes)
 import Network.Socket (Socket, sClose)
 
+import Buffer
 import Recv
 import Reply
 import Send
 import Types
 
-recvBufferSize :: Int
-recvBufferSize = 4096
-
-worker :: Options -> Socket -> IO ()
-worker opt sock = do
-    receiver <- if useRawRecv opt then do
-                    recvBuffer <- mallocForeignPtrBytes recvBufferSize
-                    return $ rawRecv sock recvBuffer recvBufferSize
-                else
-                    return $ bsRecv sock recvBufferSize
-    let sender
-          | useRawSend opt = rawSend sock replyBuffer replySize
-          | otherwise      = bsSend sock reply
-        closer = sClose sock
+worker :: Options -> Arena -> Socket -> IO ()
+worker opt arena sock = do
+    (receiver, closer) <- receiverCloser
     serve opt receiver sender closer
+  where
+    sender
+      | useRawSend opt = rawSend sock replyBuffer replySize
+      | otherwise      = bsSend sock reply
+    receiverCloser
+      | useRawRecv opt = do
+          rbuf <- if prepareRecvBuf opt then
+                      borrowBuffer arena
+                  else
+                      getBuffer
+          let rec = rawRecv sock rbuf recvBufferSize
+              clo = do
+                  sClose sock
+                  when (prepareRecvBuf opt) $ returnBuffer arena rbuf
+          return (rec, clo)
+      | otherwise = do
+          let rec = bsRecv sock recvBufferSize
+          return (rec, sClose sock)
 
 serve :: Options -> Receiver -> Sender -> Closer -> IO ()
 serve opt receiver sender closer = do

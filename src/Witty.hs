@@ -1,7 +1,10 @@
 module Main where
 
+import Control.Monad (when)
 import System.Console.GetOpt (OptDescr(..), ArgDescr(..), ArgOrder(..), getOpt, usageInfo)
 import System.Environment (getArgs)
+import System.Exit (exitFailure)
+import System.IO (hPutStrLn, stderr)
 
 import Accept
 import Listen
@@ -25,6 +28,10 @@ options = [
            ["recv"]
            (NoArg $ \opt -> opt { useRawRecv = True } )
            "directly receive a packet to a buffer"
+  , Option ['p']
+           ["prepare"]
+           (NoArg $ \opt -> opt { prepareRecvBuf = True } )
+           "prepare receive buffer in advance"
   ]
 
 parseArgs :: [String] -> IO (Options, [String])
@@ -37,4 +44,7 @@ parseArgs argv =  case getOpt Permute options argv of
 main :: IO ()
 main = do
     (opt,[port]) <- getArgs >>= parseArgs
+    when (prepareRecvBuf opt && not (useRawRecv opt)) $ do
+        hPutStrLn stderr "'-p' requires '-r'."
+        exitFailure
     listenSocket port >>= acceptLoop opt

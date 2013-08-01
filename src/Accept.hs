@@ -5,18 +5,26 @@ import Control.Monad (forever, void)
 import Network.Socket (Socket, accept, sClose)
 import Control.Exception as E
 
-import Worker
+import Buffer
 import Types
+import Worker
 
 acceptLoop :: Options -> Socket -> IO ()
-acceptLoop opt s
-  | acceptInUnbound opt = runInUnboundThread $ acceptLoop' opt s
-  | otherwise           = acceptLoop' opt s
+acceptLoop opt s = do
+    arena <- if prepareRecvBuf opt then
+                 prepareArena
+             else
+                 prepareDummyArena
+    run $ acceptLoop' opt arena s
+  where
+    run
+      | acceptInUnbound opt = runInUnboundThread
+      | otherwise           = id
 
-acceptLoop' :: Options -> Socket -> IO ()
-acceptLoop' opt s = handle handler $ forever $ do
+acceptLoop' :: Options -> Arena -> Socket -> IO ()
+acceptLoop' opt arena s = handle handler $ forever $ do
     (sock, _) <- accept s
-    void . forkIO $ worker opt sock
+    void . forkIO $ worker opt arena sock
   where
     handler :: SomeException -> IO ()
     handler _ = sClose s
