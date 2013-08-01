@@ -6,7 +6,7 @@ Haskell Compiler).
 It repeats receive/send actions without analyzing application
 protocol. Reply messages contain fixed-size HTTP reply messages.  This
 server can be considered as a web server if benchmark tools analyze
-reply messages. Alos, it can be considered as a echo server if
+reply messages. Also, it can be considered as a echo server if
 benchmark tools ignore the reply messages.
 
 I recommend to use
@@ -21,3 +21,13 @@ measure throughput and latency (response time), respectively.
 Several options are prepared to show bottlenecks of GHC.
 
 ## Options
+
+### a
+
+### y
+
+### s
+
+### r
+
+### p
