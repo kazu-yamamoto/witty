@@ -88,7 +88,47 @@ So, `yield` may not improve the throughput of the servers magically.
 
 ### The '-s' option
 
+`witty` uses `sendAll` of `Network.Socket.ByteString` by default.
+If the '-s' option, it uses the original `sendAll`
+which directly manipulates a buffer.
+I think there is no significant overhead in
+`sendAll` of `Network.Socket.ByteString`.
+
 ### The '-r' option
 
+`witty` uses `recv` of `Network.Socket.ByteString` by default.
+If the '-r' option, it uses the original `recv`
+which directly manipulates a buffer.
+
+I think that
+`recv` of `Network.Socket.ByteString` has significant overhead.
+It uses `createAndTrim` in `Data.ByteString.Internal`.
+`createAndTrim` first allocates a `ByteString` of the size specified
+to `recv`.
+After receiving data, another `ByteString` is allocated because of trimming.
+
+`ByteString` is categorized into small and large:
+
+- On 64 bit machines, large if the size >= 409, otherwise small.
+- On 32 bit machines, large if the size >= 819, otherwise small.
+
+GHC 7.6.3 or earlier, `SM_LOCK` is used to allocate any `ByteString`s
+because the global area is used.
+GHC 7.7 or later, `SM_LOCK` is used to allocate large `ByteString`s
+while small `ByteString`s are allocated from local nursery without lock.
+
+I think that `recv` should not trim `ByteString` if it receives
+considerably large data.
+Moreover, large `ByteString`s should also be allocated from
+local nursery without lock.
+
+`recv` of `Network.Socket.ByteString` allocates one or two `ByteString`
+everytime when it is called.
+Our `recv` allocates only one buffer for each HTTP connection
+even if multiple requests are transferred throught the connection.
+
 ### The '-p' option
+
+If this option is specified, receiving buffers are prepared in advance.
+This option must be used with the '-r' option.
 
