@@ -14,3 +14,10 @@ I recommend to use
 [`echo-client`](https://github.com/kazu-yamamoto/latency-bench) to
 measure throughput and latency (response time), respectively.
 
+`witty` has one and only argument, port number:
+
+    % witty 8000
+
+Several options are prepared to show bottlenecks of GHC.
+
+## Options
