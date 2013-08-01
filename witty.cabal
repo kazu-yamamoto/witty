@@ -13,6 +13,7 @@ Build-Type:             Simple
 Executable witty
   Main-Is:              Witty.hs
   Other-Modules:        Accept
+                        Buffer
                         Listen
                         Recv
                         Reply
