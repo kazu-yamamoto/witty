@@ -34,17 +34,22 @@ options = [
            "prepare receive buffer in advance"
   ]
 
+header :: String
+header = "Usage: witty [OPTION] <port>"
+
 parseArgs :: [String] -> IO (Options, [String])
 parseArgs argv =  case getOpt Permute options argv of
     (o,n,[]  ) -> return (foldl (flip id) defaultOptions o, n)
     (_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
-  where
-    header = "Usage: witty [OPTION] <port>"
 
 main :: IO ()
 main = do
-    (opt,[port]) <- getArgs >>= parseArgs
+    (opt,args) <- getArgs >>= parseArgs
     when (prepareRecvBuf opt && not (useRawRecv opt)) $ do
         hPutStrLn stderr "'-p' requires '-r'."
         exitFailure
+    when (length args /= 1) $ do
+        hPutStrLn stderr $ usageInfo header options
+        exitFailure
+    let [port] = args
     listenSocket port >>= acceptLoop opt
