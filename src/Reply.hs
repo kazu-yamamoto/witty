@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Http (
+module Reply (
     reply
   , replySize
   , replyBuffer

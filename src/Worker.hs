@@ -5,8 +5,8 @@ import Control.Monad (when)
 import Foreign.ForeignPtr (mallocForeignPtrBytes)
 import Network.Socket (Socket, sClose)
 
-import Http
 import Recv
+import Reply
 import Send
 import Types
 

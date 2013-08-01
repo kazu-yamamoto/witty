@@ -13,9 +13,9 @@ Build-Type:             Simple
 Executable witty
   Main-Is:              Witty.hs
   Other-Modules:        Accept
-                        Http
                         Listen
                         Recv
+                        Reply
                         Send
                         Types
                         Worker
