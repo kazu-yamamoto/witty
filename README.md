@@ -32,8 +32,9 @@ and a spawn Haskell goes to a worker native thread on a HEC.
     23961 recvfrom(11, ...)
     23961 sendto(11, ...)
 
-This is unnecessary overhead. With this option, the `accept` loop
-is in a worker native thread thanks to `runInUnboundThread`.
+This context switches are unnecessary overhead. With this option, the
+`accept` loop is in a worker native thread thanks to
+`runInUnboundThread`.
 
     23961 accept4(10, ...)
     23961 recvfrom(11, ...)
@@ -42,6 +43,48 @@ is in a worker native thread thanks to `runInUnboundThread`.
 This technique improves latency.
 
 ### The '-y' option
+
+GHC's I/O functions are optimistic. Let's consider `recv`.
+It first tries to read incomming data anyway.
+If the data is available, `recv` succeeds.
+Otherwise, `EAGAIN` is returned.
+In this case, `recv` asks the IO manager to notify when the data is available.
+
+If a network server repeats receive/send actions,
+`recv` just after `send` probably fails because
+there is time lag for the next request from the client.
+Thus the IO manager works frequently.
+
+    recvfrom(13, )                -- Haskell thread A
+    sendto(13, )                  -- Haskell thread A
+    recvfrom(13, ) = -1 EAGAIN    -- Haskell thread A
+    epoll_ctl(3, )                -- IO manager
+    recvfrom(14, )                -- Haskell thread B
+    sendto(14, )                  -- Haskell thread B
+    recvfrom(14, ) = -1 EAGAIN    -- Haskell thread B
+    epoll_ctl(3, )                -- IO manager
+
+With the '-y' option, `witty` calls `yield` after `send`.
+`yield` pushes its Haskell thread onto the end of thread queue. So,
+another thread can work. During the work of other threads, a request
+message would arrive.
+
+    recvfrom(13, )                -- Haskell thread A
+    sendto(13, )                  -- Haskell thread A
+    recvfrom(14, )                -- Haskell thread B
+    sendto(14, )                  -- Haskell thread B
+    recvfrom(13, )                -- Haskell thread A
+    sendto(13, )                  -- Haskell thread A
+
+In other words, `yield` makes IO manager work less frequently.
+This magically improves throughput.
+
+The IO manager use `MVar` to notify data availability to Haskell threads.
+Since `MVar` is a lock, it may be slow.
+Or, allocation of `MVar` may be slow.
+
+Note that typical real servers record log messages after `send`.
+So, `yield` may not improve the throughput of the servers magically.
 
 ### The '-s' option
 
