@@ -1,28 +1,43 @@
 {-# LANGUAGE ForeignFunctionInterface, BangPatterns #-}
 
-module Recv (recv) where
+module Recv (
+    bsRecv
+  , rawRecv
+  ) where
 
+import Control.Applicative ((<$>))
 import Control.Concurrent (threadWaitRead)
-import Data.Word (Word8)
 import Foreign.C.Types
 import Foreign.Ptr (Ptr, castPtr)
+import Foreign.ForeignPtr (withForeignPtr)
 import Network.Socket (Socket, fdSocket)
 import Network.Socket.Internal (throwSocketErrorIfMinus1RetryMayBlock)
+import qualified Network.Socket.ByteString as SB (recv)
+import qualified Data.ByteString as B (length)
 
-recv :: Socket         -- ^ Connected socket
-        -> Ptr Word8
-        -> Int         -- ^ Maximum number of bytes to receive
-        -> IO Int
+import Types
+
+----------------------------------------------------------------
+
+bsRecv :: Socket -> Int -> Receiver
+bsRecv sock size = B.length <$> SB.recv sock size
+
+----------------------------------------------------------------
+
+rawRecv :: Socket -> Buffer -> Int -> Receiver
+rawRecv sock buf size = withForeignPtr buf $ \ptr -> recv sock ptr size
+
+recv :: Socket -> Ptr a -> Int -> IO Int
 recv sock ptr !nbytes
   | nbytes < 0 = error "recv"
-  | otherwise  = recvInner (fdSocket sock) nbytes ptr
+  | otherwise  = recv' (fdSocket sock) nbytes ptr
 
-recvInner :: CInt -> Int -> Ptr Word8 -> IO Int
-recvInner s !nbytes ptr =
-    fmap fromIntegral $
-        throwSocketErrorIfMinus1RetryMayBlock "recvInner"
-        (threadWaitRead (fromIntegral s)) $
-        c_recv s (castPtr ptr) (fromIntegral nbytes) 0
+recv' :: CInt -> Int -> Ptr a -> IO Int
+recv' s !nbytes ptr = fromIntegral <$> wrap "recv'" fallback action
+  where
+    wrap = throwSocketErrorIfMinus1RetryMayBlock
+    fallback = threadWaitRead $ fromIntegral s
+    action = c_recv s (castPtr ptr) (fromIntegral nbytes) 0
 
 foreign import ccall unsafe "recv"
   c_recv :: CInt -> Ptr CChar -> CSize -> CInt -> IO CInt

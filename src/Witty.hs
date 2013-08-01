@@ -17,6 +17,14 @@ options = [
            ["yield"]
            (NoArg $ \opt -> opt { yieldAfterSend = True } )
            "yield after sending a reply to give time to the next coming request"
+  , Option ['s']
+           ["send"]
+           (NoArg $ \opt -> opt { useRawSend = True } )
+           "directly send a buffer"
+  , Option ['r']
+           ["recv"]
+           (NoArg $ \opt -> opt { useRawRecv = True } )
+           "directly receive a packet to a buffer"
   ]
 
 parseArgs :: [String] -> IO (Options, [String])

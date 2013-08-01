@@ -2,10 +2,7 @@ module Worker where
 
 import Control.Concurrent (yield)
 import Control.Monad (when)
-import Data.ByteString.Internal (toForeignPtr)
-import Data.Word (Word8)
-import Foreign.ForeignPtr (mallocForeignPtrBytes, withForeignPtr)
-import Foreign.Ptr (Ptr)
+import Foreign.ForeignPtr (mallocForeignPtrBytes)
 import Network.Socket (Socket, sClose)
 
 import Http
@@ -18,21 +15,23 @@ recvBufferSize = 4096
 
 worker :: Options -> Socket -> IO ()
 worker opt sock = do
-    recvBuffer <- mallocForeignPtrBytes recvBufferSize
-    let (replyFPtr,_,_) = toForeignPtr reply
-        shouldYield = yieldAfterSend opt
-    withForeignPtr replyFPtr $
-        withForeignPtr recvBuffer . serve shouldYield sock
+    receiver <- if useRawRecv opt then do
+                    recvBuffer <- mallocForeignPtrBytes recvBufferSize
+                    return $ rawRecv sock recvBuffer recvBufferSize
+                else
+                    return $ bsRecv sock recvBufferSize
+    let sender
+          | useRawSend opt = rawSend sock replyBuffer replySize
+          | otherwise      = bsSend sock reply
+        closer = sClose sock
+    serve opt receiver sender closer
 
-serve :: Bool -> Socket -> Ptr Word8 -> Ptr Word8 -> IO ()
-serve shouldYield sock replyPtr recvPtr = loop
-  where
-    loop = do
-        len <- recv sock recvPtr recvBufferSize
-        if len > 0 then do
-            sendAll sock replyPtr replyLen
-            when shouldYield yield
-            loop
-          else
-            sClose sock
-
+serve :: Options -> Receiver -> Sender -> Closer -> IO ()
+serve opt receiver sender closer = do
+    len <- receiver
+    if len > 0 then do
+        sender
+        when (yieldAfterSend opt) yield
+        serve opt receiver sender closer
+      else
+        closer

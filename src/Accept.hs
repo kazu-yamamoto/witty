@@ -1,8 +1,9 @@
 module Accept (acceptLoop) where
 
 import Control.Concurrent (forkIO, runInUnboundThread)
-import Control.Monad (forever)
-import Network.Socket (Socket, accept)
+import Control.Monad (forever, void)
+import Network.Socket (Socket, accept, sClose)
+import Control.Exception as E
 
 import Worker
 import Types
@@ -13,6 +14,9 @@ acceptLoop opt s
   | otherwise           = acceptLoop' opt s
 
 acceptLoop' :: Options -> Socket -> IO ()
-acceptLoop' opt s = forever $ do
+acceptLoop' opt s = handle handler $ forever $ do
     (sock, _) <- accept s
-    forkIO $ worker opt sock
+    void . forkIO $ worker opt sock
+  where
+    handler :: SomeException -> IO ()
+    handler _ = sClose s
