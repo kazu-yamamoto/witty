@@ -6,6 +6,7 @@ License:                BSD3
 License-File:           LICENSE
 Synopsis:               A network server to show bottlenecks of GHC
 Description:            A network server to show bottlenecks of GHC
+Homepage:               https://github.com/kazu-yamamoto/witty/blob/master/README.md
 Category:               Network, Web
 Cabal-Version:          >= 1.8
 Build-Type:             Simple
