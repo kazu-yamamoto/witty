@@ -26,3 +26,7 @@ Executable witty
                       , bytestring
                       , network
 
+Source-Repository head
+  Type:                 git
+  Location:             git://github.com/kazu-yamamoto/witty
+
