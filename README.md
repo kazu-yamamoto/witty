@@ -22,7 +22,7 @@ Several options are prepared to show bottlenecks of GHC.
 
 ## Options
 
-### a
+### The '-a' option
 
 ### y
 
