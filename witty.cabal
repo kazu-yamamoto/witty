@@ -4,8 +4,8 @@ Author:                 Kazu Yamamoto <kazu@iij.ad.jp>
 Maintainer:             Kazu Yamamoto <kazu@iij.ad.jp>
 License:                BSD3
 License-File:           LICENSE
-Synopsis:               A web server to show bottlenecks of GHC
-Description:            A web server to show bottlenecks of GHC
+Synopsis:               A network server to show bottlenecks of GHC
+Description:            A network server to show bottlenecks of GHC
 Category:               Network, Web
 Cabal-Version:          >= 1.8
 Build-Type:             Simple
