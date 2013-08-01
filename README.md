@@ -117,6 +117,8 @@ because the global area is used.
 GHC 7.7 or later, `SM_LOCK` is used to allocate large `ByteString`s
 while small `ByteString`s are allocated from local nursery without lock.
 
+`witty` specifies 4096 to `recv` of `Network.Socket.ByteString`.
+
 I think that `recv` should not trim `ByteString` if it receives
 considerably large data.
 Moreover, large `ByteString`s should also be allocated from
