@@ -6,7 +6,7 @@ Haskell Compiler).
 It repeats receive/send actions without analyzing application
 protocols. Reply messages contain fixed-size HTTP reply messages.  This
 server can be considered as a web server if benchmark tools analyze
-reply messages. Also, it can be considered as a echo server if
+reply messages. Also, it can be considered as an echo server if
 benchmark tools ignore the reply messages.
 
 I recommend to use
@@ -45,14 +45,14 @@ This technique improves latency.
 ### The '-y' option
 
 GHC's I/O functions are optimistic. Let's consider `recv`.
-It first tries to read incomming data anyway.
-If the data is available, `recv` succeeds.
+It first tries to read incoming data anyway.
+If the data are available, `recv` succeeds.
 Otherwise, `EAGAIN` is returned.
-In this case, `recv` asks the IO manager to notify when the data is available.
+In this case, `recv` asks the IO manager to notify when the data are available.
 
 If a network server repeats receive/send actions,
 `recv` just after `send` probably fails because
-there is time lag for the next request from the client.
+there is a time lag for the next request from the client.
 Thus the IO manager works frequently.
 
     recvfrom(13, )                -- Haskell thread A
@@ -76,10 +76,10 @@ message would arrive.
     recvfrom(13, )                -- Haskell thread A
     sendto(13, )                  -- Haskell thread A
 
-In other words, `yield` makes IO manager work less frequently.
+In other words, `yield` makes the IO manager work less frequently.
 This magically improves throughput.
 
-The IO manager use `MVar` to notify data availability to Haskell threads.
+The IO manager uses `MVar` to notify data availability to Haskell threads.
 Since `MVar` is a lock, it may be slow.
 Or, allocation of `MVar` may be slow.
 
@@ -115,14 +115,14 @@ After receiving data, another `ByteString` is allocated because of trimming.
 GHC 7.6.3 or earlier, `SM_LOCK` is used to allocate any `ByteString`s
 because the global area is used.
 GHC 7.7 or later, `SM_LOCK` is used to allocate large `ByteString`s
-while small `ByteString`s are allocated from local nursery without lock.
+while small `ByteString`s are allocated from a local nursery without a lock.
 
 `witty` specifies 4096 to `recv` of `Network.Socket.ByteString`.
 
 I think that `recv` should not trim `ByteString` if it receives
 considerably large data.
 Moreover, large `ByteString`s should also be allocated from
-local nursery without lock.
+a local nursery without a lock.
 
 `recv` of `Network.Socket.ByteString` allocates one or two `ByteString`
 everytime when it is called.
