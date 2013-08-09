@@ -4,10 +4,10 @@
 Haskell Compiler).
 
 It repeats receive/send actions without analyzing application
-protocols. Reply messages contain fixed-size HTTP reply messages.  This
-server can be considered as a web server if benchmark tools analyze
-reply messages. Also, it can be considered as an echo server if
-benchmark tools ignore the reply messages.
+protocols. Reply messages contain fixed-size HTTP reply messages.
+This server can be considered as a web server if benchmark tools
+analyze reply messages. Also, it can be considered as an ping-pong
+server if benchmark tools ignore the reply messages.
 
 I recommend to use
 [`weighttp`](http://redmine.lighttpd.net/projects/weighttp/wiki) and
