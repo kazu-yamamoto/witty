@@ -58,11 +58,11 @@ Thus the IO manager works frequently.
     recvfrom(13, )                -- Haskell thread A
     sendto(13, )                  -- Haskell thread A
     recvfrom(13, ) = -1 EAGAIN    -- Haskell thread A
-    epoll_ctl(3, )                -- IO manager
+    epoll_ctl(3, )                -- Haskell thread A (a job for IO manager)
     recvfrom(14, )                -- Haskell thread B
     sendto(14, )                  -- Haskell thread B
     recvfrom(14, ) = -1 EAGAIN    -- Haskell thread B
-    epoll_ctl(3, )                -- IO manager
+    epoll_ctl(3, )                -- Haskell thread B (a job for IO manager)
 
 With the '-y' option, `witty` calls `yield` after `send`.
 `yield` pushes its Haskell thread onto the end of thread queue. So,
