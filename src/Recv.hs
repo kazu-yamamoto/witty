@@ -8,7 +8,6 @@ module Recv (
 import Control.Applicative ((<$>))
 import Control.Concurrent (threadWaitRead)
 import qualified Data.ByteString as B (length)
-import Data.Word (Word8)
 import Foreign.C.Error (eAGAIN, getErrno, throwErrno)
 import Foreign.C.Types
 import Foreign.ForeignPtr (withForeignPtr)
@@ -27,16 +26,12 @@ bsRecv sock size = B.length <$> SB.recv sock size
 ----------------------------------------------------------------
 
 rawRecv :: Socket -> Buffer -> Int -> Receiver
-rawRecv sock buf size = withForeignPtr buf $ \ptr -> recv sock ptr size
-
-recv :: Socket -> Ptr Word8 -> Int -> IO Int
-recv sock buf !nbytes
-  | nbytes < 0 = error "recv"
-  | otherwise  = fromIntegral <$> recvloop s ptr size
+rawRecv sock fptr len = withForeignPtr fptr $ \ptr -> do
+    let buf = castPtr ptr
+    fromIntegral <$> recvloop s buf size
   where
     s = fdSocket sock
-    ptr = castPtr buf
-    size = fromIntegral nbytes
+    size = fromIntegral len
 
 recvloop :: CInt -> Ptr CChar -> CSize -> IO CInt
 recvloop sock buf size = do
