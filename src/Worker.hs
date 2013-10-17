@@ -5,6 +5,7 @@ import Control.Monad (when)
 import Network.Socket (Socket, sClose)
 
 import Buffer
+import Malloc
 import Recv
 import Reply
 import Send
@@ -19,6 +20,13 @@ worker opt arena sock = do
       | useRawSend opt = rawSend sock reply
       | otherwise      = bsSend sock reply
     receiverCloser
+      | useMalloc opt  = do
+          buf <- mallocBuf recvBufferSize
+          let rec = rawRecvM sock buf recvBufferSize
+              clo = do
+                  sClose sock
+                  freeBuf buf
+          return (rec, clo)
       | useRawRecv opt = do
           rbuf <- if prepareRecvBuf opt then
                       borrowBuffer arena

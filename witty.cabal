@@ -16,6 +16,7 @@ Executable witty
   Other-Modules:        Accept
                         Buffer
                         Listen
+                        Malloc
                         Prefork
                         Recv
                         Reply

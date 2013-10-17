@@ -9,6 +9,7 @@ data Options = Options {
   , useRawSend      :: Bool
   , useRawRecv      :: Bool
   , prepareRecvBuf  :: Bool
+  , useMalloc       :: Bool
   , processes       :: Int
   }
 
@@ -19,6 +20,7 @@ defaultOptions = Options {
   , useRawSend      = False
   , useRawRecv      = False
   , prepareRecvBuf  = False
+  , useMalloc       = False
   , processes       = 1
   }
 

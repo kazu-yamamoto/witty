@@ -33,6 +33,10 @@ options = [
            ["prepare"]
            (NoArg $ \opt -> opt { prepareRecvBuf = True } )
            "prepare receive buffer in advance"
+  , Option ['m']
+           ["malloc"]
+           (NoArg $ \opt -> opt { useMalloc = True } )
+           "prepare receive buffer with malloc(3)"
   , Option ['n']
            ["processes"]
            (ReqArg (\n opt -> opt { processes = read n }) "N")
@@ -52,6 +56,9 @@ main = do
     (opt,args) <- getArgs >>= parseArgs
     when (prepareRecvBuf opt && not (useRawRecv opt)) $ do
         hPutStrLn stderr "'-p' requires '-r'."
+        exitFailure
+    when (useMalloc opt && prepareRecvBuf opt) $ do
+        hPutStrLn stderr "'-m' cannot work with '-a'."
         exitFailure
     when (length args /= 1) $ do
         hPutStrLn stderr $ usageInfo header options
