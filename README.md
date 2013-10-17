@@ -134,3 +134,16 @@ even if multiple requests are transferred throught the connection.
 If this option is specified, receiving buffers are prepared in advance.
 This option must be used with the '-r' option.
 
+### The '-m' option
+
+If this option is specified, receiving buffers are prepared by
+malloc(3). GHC's GC does not care of them.  Sophisticated malloc(3)
+has an arena for each core. So, we don't have to manage arenas by
+ourselves (like '-p' option).
+
+This option must not be used with the '-r' option and '-p' option.
+
+### The '-n' option
+
+This option takes the number of processes. Instead of `+RTS -Nx` option,
+this option creates N processes to utilize cores.
