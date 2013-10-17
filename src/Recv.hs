@@ -7,13 +7,15 @@ module Recv (
 
 import Control.Applicative ((<$>))
 import Control.Concurrent (threadWaitRead)
-import Foreign.C.Types
-import Foreign.Ptr (Ptr, castPtr)
-import Foreign.ForeignPtr (withForeignPtr)
-import Network.Socket (Socket, fdSocket)
-import Network.Socket.Internal (throwSocketErrorIfMinus1RetryMayBlock)
-import qualified Network.Socket.ByteString as SB (recv)
 import qualified Data.ByteString as B (length)
+import Data.Word (Word8)
+import Foreign.C.Error (eAGAIN, getErrno, throwErrno)
+import Foreign.C.Types
+import Foreign.ForeignPtr (withForeignPtr)
+import Foreign.Ptr (Ptr, castPtr)
+import Network.Socket (Socket, fdSocket)
+import qualified Network.Socket.ByteString as SB (recv)
+import System.Posix.Types (Fd(..))
 
 import Types
 
@@ -27,17 +29,27 @@ bsRecv sock size = B.length <$> SB.recv sock size
 rawRecv :: Socket -> Buffer -> Int -> Receiver
 rawRecv sock buf size = withForeignPtr buf $ \ptr -> recv sock ptr size
 
-recv :: Socket -> Ptr a -> Int -> IO Int
-recv sock ptr !nbytes
+recv :: Socket -> Ptr Word8 -> Int -> IO Int
+recv sock buf !nbytes
   | nbytes < 0 = error "recv"
-  | otherwise  = recv' (fdSocket sock) nbytes ptr
-
-recv' :: CInt -> Int -> Ptr a -> IO Int
-recv' s !nbytes ptr = fromIntegral <$> wrap "recv'" fallback action
+  | otherwise  = fromIntegral <$> recvloop s ptr size
   where
-    wrap = throwSocketErrorIfMinus1RetryMayBlock
-    fallback = threadWaitRead $ fromIntegral s
-    action = c_recv s (castPtr ptr) (fromIntegral nbytes) 0
+    s = fdSocket sock
+    ptr = castPtr buf
+    size = fromIntegral nbytes
+
+recvloop :: CInt -> Ptr CChar -> CSize -> IO CInt
+recvloop sock buf size = do
+    bytes <- c_recv sock buf size 0
+    if bytes == -1 then do
+        errno <- getErrno
+        if errno == eAGAIN then do
+            threadWaitRead (Fd sock)
+            recvloop sock buf size
+          else
+            throwErrno "recvloop"
+       else
+        return bytes
 
 foreign import ccall unsafe "recv"
   c_recv :: CInt -> Ptr CChar -> CSize -> CInt -> IO CInt
