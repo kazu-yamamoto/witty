@@ -16,6 +16,7 @@ Executable witty
   Other-Modules:        Accept
                         Buffer
                         Listen
+                        Prefork
                         Recv
                         Reply
                         Send
@@ -26,6 +27,7 @@ Executable witty
   Build-Depends:        base >= 4.0 && < 5
                       , bytestring
                       , network
+                      , unix
 
 Source-Repository head
   Type:                 git

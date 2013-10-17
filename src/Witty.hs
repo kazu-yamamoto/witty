@@ -8,6 +8,7 @@ import System.IO (hPutStrLn, stderr)
 
 import Accept
 import Listen
+import Prefork
 import Types
 
 options :: [OptDescr (Options -> Options)]
@@ -32,6 +33,10 @@ options = [
            ["prepare"]
            (NoArg $ \opt -> opt { prepareRecvBuf = True } )
            "prepare receive buffer in advance"
+  , Option ['n']
+           ["processes"]
+           (ReqArg (\n opt -> opt { processes = read n }) "N")
+           "forking N processes with the port shared"
   ]
 
 header :: String
@@ -52,4 +57,7 @@ main = do
         hPutStrLn stderr $ usageInfo header options
         exitFailure
     let [port] = args
-    listenSocket port >>= acceptLoop opt
+    s <- listenSocket port
+    prefork opt s
+    -- ignore children
+    acceptLoop opt s

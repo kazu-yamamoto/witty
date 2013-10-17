@@ -9,6 +9,7 @@ data Options = Options {
   , useRawSend      :: Bool
   , useRawRecv      :: Bool
   , prepareRecvBuf  :: Bool
+  , processes       :: Int
   }
 
 defaultOptions :: Options
@@ -18,6 +19,7 @@ defaultOptions = Options {
   , useRawSend      = False
   , useRawRecv      = False
   , prepareRecvBuf  = False
+  , processes       = 1
   }
 
 type Receiver = IO Int
