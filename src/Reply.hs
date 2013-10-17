@@ -2,15 +2,9 @@
 
 module Reply (
     reply
-  , replySize
-  , replyBuffer
   ) where
 
-import Data.ByteString as B (ByteString, concat, length)
-import Data.ByteString.Char8 ()
-import Data.ByteString.Internal (ByteString(..))
-
-import Types
+import Data.ByteString.Char8 as B (ByteString, concat)
 
 reply :: ByteString
 reply = B.concat [
@@ -30,11 +24,3 @@ reply = B.concat [
   , "</body>\n"
   , "</html>\n"
   ]
-
-replySize :: Int
-replySize = B.length reply
-
-replyBuffer :: Buffer
-replyBuffer = buf
-  where
-    PS buf _ _ = reply

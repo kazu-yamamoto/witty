@@ -5,16 +5,16 @@ module Send (
   , rawSend
   ) where
 
-import Control.Applicative ((<$>))
-import Control.Concurrent (threadWaitWrite)
 import Control.Monad (when)
-import Data.ByteString (ByteString)
+import Data.ByteString.Internal
+import Foreign.C.Error (eAGAIN, getErrno, throwErrno)
 import Foreign.C.Types
 import Foreign.ForeignPtr (withForeignPtr)
-import Foreign.Ptr (Ptr, plusPtr)
+import Foreign.Ptr (Ptr, plusPtr, castPtr)
+import GHC.Conc (threadWaitWrite)
 import Network.Socket (Socket(..))
 import qualified Network.Socket.ByteString as SB (sendAll)
-import Network.Socket.Internal (throwSocketErrorIfMinus1RetryMayBlock)
+import System.Posix.Types (Fd(..))
 
 import Types
 
@@ -25,21 +25,31 @@ bsSend  = SB.sendAll
 
 ----------------------------------------------------------------
 
-rawSend :: Socket -> Buffer -> Int -> IO ()
-rawSend sock buf size = withForeignPtr buf $ \ptr -> sendAll sock ptr size
-
-sendAll :: Socket -> Ptr a -> Int -> IO ()
-sendAll !sock !ptr !len = do
-    sent <- send' sock ptr len
-    when (sent < len) $ sendAll sock (ptr `plusPtr` sent) (len - sent)
-
-send' :: Socket -> Ptr a -> Int -> IO Int
-send' (MkSocket s _ _ _ _) ptr len =
-    fromIntegral <$> wrap "send'" fallback action
+rawSend :: Socket -> ByteString -> IO ()
+rawSend sock bs = withForeignPtr fptr $ \ptr -> do
+    let buf = castPtr (ptr `plusPtr` off)
+        siz = fromIntegral len
+    sendloop s buf siz
   where
-    wrap = throwSocketErrorIfMinus1RetryMayBlock
-    fallback = threadWaitWrite $ fromIntegral s
-    action = c_send s ptr (fromIntegral len) 0
+    MkSocket s _ _ _ _ = sock
+    PS fptr off len = bs
+
+sendloop :: CInt -> Ptr CChar -> CSize -> IO ()
+sendloop s buf len = do
+    bytes <- c_send s buf len 0
+    if bytes == -1 then do
+        errno <- getErrno
+        if errno == eAGAIN then do
+            threadWaitWrite (Fd s)
+            sendloop s buf len
+          else
+            throwErrno "sendloop"
+      else do
+        let sent = fromIntegral bytes
+        when (sent /= len) $ do
+            let left = len - sent
+                ptr = buf `plusPtr` fromIntegral bytes
+            sendloop s ptr left
 
 foreign import ccall unsafe "send"
   c_send :: CInt -> Ptr a -> CSize -> CInt -> IO CInt

@@ -16,7 +16,7 @@ worker opt arena sock = do
     serve opt receiver sender closer
   where
     sender
-      | useRawSend opt = rawSend sock replyBuffer replySize
+      | useRawSend opt = rawSend sock reply
       | otherwise      = bsSend sock reply
     receiverCloser
       | useRawRecv opt = do
