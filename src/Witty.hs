@@ -59,5 +59,4 @@ main = do
     let [port] = args
     s <- listenSocket port
     prefork opt s
-    -- ignore children
     acceptLoop opt s
