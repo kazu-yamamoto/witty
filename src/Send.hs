@@ -25,14 +25,14 @@ bsSend  = SB.sendAll
 
 ----------------------------------------------------------------
 
-rawSend :: Socket -> ByteString -> IO ()
+rawSend :: Socket -> ByteString -> Sender
 rawSend sock bs = withForeignPtr fptr $ \ptr -> do
     let buf = castPtr (ptr `plusPtr` off)
-        siz = fromIntegral len
     sendloop s buf siz
   where
     MkSocket s _ _ _ _ = sock
     PS fptr off len = bs
+    siz = fromIntegral len
 
 sendloop :: CInt -> Ptr CChar -> CSize -> IO ()
 sendloop s buf len = do
