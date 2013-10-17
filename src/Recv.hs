@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface, BangPatterns #-}
+{-# LANGUAGE ForeignFunctionInterface #-}
 
 module Recv (
     bsRecv
