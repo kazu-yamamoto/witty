@@ -137,7 +137,7 @@ This option must be used with the '-r' option.
 ### The '-m' option
 
 If this option is specified, receiving buffers are prepared by
-malloc(3). GHC's GC does not care of them.  Sophisticated malloc(3)
+malloc(3). GHC's GC does not take care of them.  Sophisticated malloc(3)
 has an arena for each core. So, we don't have to manage arenas by
 ourselves (like '-p' option).
 
