@@ -22,7 +22,7 @@ acceptLoop opt s = do
       | otherwise           = id
 
 acceptLoop' :: Options -> Arena -> Socket -> IO ()
-acceptLoop' opt arena s = handle handler $ forever $ do
+acceptLoop' opt arena s = forever $ handle handler $ do
     (sock, _) <- accept s
     void . forkIO $ worker opt arena sock
   where
