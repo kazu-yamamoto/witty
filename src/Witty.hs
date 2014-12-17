@@ -1,6 +1,8 @@
 module Main where
 
+import qualified Control.Exception as E
 import Control.Monad (when)
+import Network.Socket (sClose)
 import System.Console.GetOpt (OptDescr(..), ArgDescr(..), ArgOrder(..), getOpt, usageInfo)
 import System.Environment (getArgs)
 import System.Exit (exitFailure)
@@ -64,6 +66,6 @@ main = do
         hPutStrLn stderr $ usageInfo header options
         exitFailure
     let [port] = args
-    s <- listenSocket port
-    prefork opt s
-    acceptLoop opt s
+    E.bracket (listenSocket port)
+              sClose
+              (\s -> prefork opt s >> acceptLoop opt s)
