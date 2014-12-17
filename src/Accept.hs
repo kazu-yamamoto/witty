@@ -1,6 +1,7 @@
 module Accept (acceptLoop) where
 
 import Control.Concurrent (forkIO, runInUnboundThread)
+import qualified Control.Exception as E
 import Control.Monad (forever, void)
 import Network.Socket (Socket, accept)
 
@@ -21,6 +22,9 @@ acceptLoop opt s = do
       | otherwise           = id
 
 acceptLoop' :: Options -> Arena -> Socket -> IO ()
-acceptLoop' opt arena s = forever $ do
+acceptLoop' opt arena s = forever $ E.handle handler $ do
     (sock, _) <- accept s
     void . forkIO $ worker opt arena sock
+  where
+    handler :: E.IOException -> IO ()
+    handler e = print e
