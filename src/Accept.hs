@@ -1,8 +1,9 @@
 module Accept (acceptLoop) where
 
-import Control.Concurrent (forkIO, runInUnboundThread)
+import Control.Concurrent (forkFinally, runInUnboundThread)
 import qualified Control.Exception as E
 import Control.Monad (void)
+import Network (sClose)
 import Network.Socket (Socket, accept)
 
 import Buffer
@@ -26,7 +27,7 @@ acceptLoop' opt arena s = E.handle handler loop
   where
     loop = do
         (sock, _) <- accept s
-        void . forkIO $ worker opt arena sock
+        void $ forkFinally (worker opt arena sock) (const $ sClose sock)
         loop
     handler :: E.IOException -> IO ()
     handler e = print e

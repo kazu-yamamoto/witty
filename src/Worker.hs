@@ -1,8 +1,9 @@
 module Worker where
 
 import Control.Concurrent (yield)
+import Control.Exception (finally)
 import Control.Monad (when)
-import Network.Socket (Socket, sClose)
+import Network.Socket (Socket)
 
 import Buffer
 import Malloc
@@ -11,10 +12,11 @@ import Reply
 import Send
 import Types
 
+
 worker :: Options -> Arena -> Socket -> IO ()
 worker opt arena sock = do
     (receiver, closer) <- receiverCloser
-    serve opt receiver sender closer
+    serve opt receiver sender `finally` closer
   where
     sender
       | useRawSend opt = rawSend sock reply
@@ -23,9 +25,7 @@ worker opt arena sock = do
       | useMalloc opt  = do
           buf <- mallocBuf recvBufferSize
           let rec = rawRecvM sock buf recvBufferSize
-              clo = do
-                  sClose sock
-                  freeBuf buf
+              clo = freeBuf buf
           return (rec, clo)
       | useRawRecv opt = do
           rbuf <- if prepareRecvBuf opt then
@@ -33,20 +33,19 @@ worker opt arena sock = do
                   else
                       getBuffer
           let rec = rawRecv sock rbuf recvBufferSize
-              clo = do
-                  sClose sock
-                  when (prepareRecvBuf opt) $ returnBuffer arena rbuf
+              clo = when (prepareRecvBuf opt) $ returnBuffer arena rbuf
+
           return (rec, clo)
       | otherwise = do
           let rec = bsRecv sock recvBufferSize
-          return (rec, sClose sock)
+          return (rec, return ())
 
-serve :: Options -> Receiver -> Sender -> Closer -> IO ()
-serve opt receiver sender closer = do
-    len <- receiver
-    if len > 0 then do
-        sender
-        when (yieldAfterSend opt) yield
-        serve opt receiver sender closer
-      else
-        closer
+serve :: Options -> Receiver -> Sender -> IO ()
+serve opt receiver sender = loop
+  where
+    loop = do
+        len <- receiver
+        when (len > 0) $ do
+            sender
+            when (yieldAfterSend opt) yield
+            loop
