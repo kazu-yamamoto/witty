@@ -109,8 +109,8 @@ After receiving data, another `ByteString` is allocated because of trimming.
 
 `ByteString` is categorized into small and large:
 
-- On 64 bit machines, large if the size >= 409, otherwise small.
-- On 32 bit machines, large if the size >= 819, otherwise small.
+- On 64 bit machines, large if the size >= 3272 (409 words), otherwise small.
+- On 32 bit machines, large if the size >= 3276 (819 words), otherwise small.
 
 GHC 7.6.3 or earlier, `SM_LOCK` is used to allocate any `ByteString`s
 because the global area is used.
